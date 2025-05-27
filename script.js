@@ -12,6 +12,23 @@ const settingsModal = document.getElementById("settings-modal");
 const updateSettingsBtn = document.getElementById("update-settings");
 const container = document.querySelector(".container");
 
+// Navigation Elements
+const navItems = document.querySelectorAll(".nav-item");
+const contentSections = document.querySelectorAll(".content-section");
+
+// Stop Section Elements
+const stopTimerBtn = document.getElementById("stop-timer");
+const resetTimerBtn = document.getElementById("reset-timer");
+
+// Calendar Section Elements
+const scheduleTaskInput = document.getElementById("schedule-task");
+const scheduleTimeInput = document.getElementById("schedule-time");
+const addScheduleBtn = document.getElementById("add-schedule");
+
+// Notes Section Elements
+const taskNotesInput = document.getElementById("task-notes");
+const saveNotesBtn = document.getElementById("save-notes");
+
 // Mini Window Controls
 const miniTimerBtn = document.getElementById("mini-timer-btn");
 const miniBreakBtn = document.getElementById("mini-break-btn");
@@ -30,6 +47,21 @@ let timeLeft = modeTimes[currentMode];
 
 let miniWindow = null;
 
+// Stopwatch Elements
+const stopwatchDisplay = document.querySelector(".stopwatch-display");
+const stopwatchStartBtn = document.getElementById("stopwatch-start");
+const stopwatchStopBtn = document.getElementById("stopwatch-stop");
+const stopwatchLapBtn = document.getElementById("stopwatch-lap");
+const stopwatchResetBtn = document.getElementById("stopwatch-reset");
+const lapList = document.getElementById("lap-list");
+
+// Stopwatch Variables
+let stopwatchInterval = null;
+let stopwatchRunning = false;
+let stopwatchTime = 0;
+let lapTimes = [];
+let lastLapTime = 0;
+
 // Add this with your other DOM element declarations at the top
 const exitFullscreenBtn = document.createElement("button");
 exitFullscreenBtn.className = "exit-fullscreen-btn";
@@ -43,6 +75,99 @@ document.body.appendChild(exitFullscreenBtn);
 
 // Initialize
 updateDisplay();
+
+// Navigation Event Listeners
+navItems.forEach((item) => {
+  item.addEventListener("click", () => {
+    // Remove active class from all items and sections
+    navItems.forEach((i) => i.classList.remove("active"));
+    contentSections.forEach((s) => s.classList.remove("active"));
+
+    // Add active class to clicked item and corresponding section
+    item.classList.add("active");
+    const sectionId = item.dataset.section;
+    document.getElementById(sectionId).classList.add("active");
+  });
+});
+
+// Stop Section Functionality
+stopTimerBtn.addEventListener("click", () => {
+  if (isRunning) {
+    clearInterval(timer);
+    isRunning = false;
+    startBtn.textContent = "Start";
+  }
+});
+
+resetTimerBtn.addEventListener("click", () => {
+  clearInterval(timer);
+  isRunning = false;
+  timeLeft = modeTimes[currentMode];
+  updateDisplay();
+  startBtn.textContent = "Start";
+});
+
+// Calendar Section Functionality
+let scheduledTasks = JSON.parse(localStorage.getItem("scheduledTasks")) || [];
+
+function addScheduledTask(task, datetime) {
+  scheduledTasks.push({ task, datetime });
+  localStorage.setItem("scheduledTasks", JSON.stringify(scheduledTasks));
+  updateCalendar();
+}
+
+function updateCalendar() {
+  const calendar = document.getElementById("calendar");
+  calendar.innerHTML = "";
+
+  // Sort tasks by datetime
+  scheduledTasks.sort((a, b) => new Date(a.datetime) - new Date(b.datetime));
+
+  scheduledTasks.forEach(({ task, datetime }) => {
+    const taskElement = document.createElement("div");
+    taskElement.className = "calendar-task";
+    taskElement.innerHTML = `
+            <div class="task-time">${new Date(datetime).toLocaleString()}</div>
+            <div class="task-text">${task}</div>
+            <button class="delete-task"><i class="fas fa-times"></i></button>
+        `;
+
+    taskElement.querySelector(".delete-task").addEventListener("click", () => {
+      scheduledTasks = scheduledTasks.filter(
+        (t) => t.task !== task || t.datetime !== datetime
+      );
+      localStorage.setItem("scheduledTasks", JSON.stringify(scheduledTasks));
+      updateCalendar();
+    });
+
+    calendar.appendChild(taskElement);
+  });
+}
+
+addScheduleBtn.addEventListener("click", () => {
+  const task = scheduleTaskInput.value.trim();
+  const datetime = scheduleTimeInput.value;
+
+  if (task && datetime) {
+    addScheduledTask(task, datetime);
+    scheduleTaskInput.value = "";
+    scheduleTimeInput.value = "";
+  }
+});
+
+// Notes Section Functionality
+let savedNotes = localStorage.getItem("taskNotes") || "";
+taskNotesInput.value = savedNotes;
+
+saveNotesBtn.addEventListener("click", () => {
+  const notes = taskNotesInput.value;
+  localStorage.setItem("taskNotes", notes);
+  // Show save confirmation
+  saveNotesBtn.innerHTML = '<i class="fas fa-check"></i> Saved!';
+  setTimeout(() => {
+    saveNotesBtn.innerHTML = "Save Notes";
+  }, 2000);
+});
 
 // Event Listeners
 startBtn.addEventListener("click", toggleTimer);
@@ -438,5 +563,194 @@ exitFullscreenBtn.addEventListener("click", () => {
 document.addEventListener("keydown", (e) => {
   if (e.key === "Escape" && container.classList.contains("fullscreen")) {
     container.classList.remove("fullscreen");
+  }
+});
+
+// Add styles for calendar tasks
+const style = document.createElement("style");
+style.textContent = `
+    .calendar-task {
+        background: var(--button-bg);
+        padding: 1rem;
+        margin: 0.5rem 0;
+        border-radius: 4px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .task-time {
+        color: #888;
+        font-size: 0.9rem;
+    }
+    
+    .delete-task {
+        background: none;
+        border: none;
+        color: #666;
+        cursor: pointer;
+        padding: 0.25rem;
+    }
+    
+    .delete-task:hover {
+        color: #ff4444;
+    }
+`;
+document.head.appendChild(style);
+
+// Initialize calendar
+updateCalendar();
+
+// Initialize stopwatch display
+if (stopwatchDisplay) {
+  updateStopwatchDisplay();
+}
+
+// Stopwatch Functions
+function startStopwatch() {
+  console.log("Starting stopwatch");
+  if (!stopwatchRunning) {
+    console.log("Stopwatch was not running, starting now");
+    stopwatchRunning = true;
+    const startTime = Date.now() - stopwatchTime;
+
+    stopwatchInterval = setInterval(() => {
+      stopwatchTime = Date.now() - startTime;
+      updateStopwatchDisplay();
+    }, 10);
+
+    // Update button states
+    stopwatchStartBtn.disabled = true;
+    stopwatchStopBtn.disabled = false;
+    stopwatchLapBtn.disabled = false;
+    stopwatchResetBtn.disabled = true;
+  }
+}
+
+function stopStopwatch() {
+  console.log("Stopping stopwatch");
+  if (stopwatchRunning) {
+    console.log("Stopwatch was running, stopping now");
+    stopwatchRunning = false;
+    clearInterval(stopwatchInterval);
+
+    // Update button states
+    stopwatchStartBtn.disabled = false;
+    stopwatchStopBtn.disabled = true;
+    stopwatchLapBtn.disabled = true;
+    stopwatchResetBtn.disabled = false;
+
+    // Update button text
+    stopwatchStartBtn.innerHTML = '<i class="fas fa-play"></i> Resume';
+  }
+}
+
+function resetStopwatch() {
+  console.log("Resetting stopwatch");
+  stopwatchRunning = false;
+  clearInterval(stopwatchInterval);
+  stopwatchTime = 0;
+  lapTimes = [];
+  lastLapTime = 0;
+
+  // Update display
+  updateStopwatchDisplay();
+  if (lapList) {
+    lapList.innerHTML = "";
+  }
+
+  // Reset button states
+  stopwatchStartBtn.disabled = false;
+  stopwatchStopBtn.disabled = true;
+  stopwatchLapBtn.disabled = true;
+  stopwatchResetBtn.disabled = true;
+
+  // Reset start button text
+  stopwatchStartBtn.innerHTML = '<i class="fas fa-play"></i> Start';
+}
+
+function recordLap() {
+  if (stopwatchRunning) {
+    const currentLapTime = stopwatchTime;
+    const lapDuration = currentLapTime - lastLapTime;
+    lastLapTime = currentLapTime;
+
+    lapTimes.push({
+      number: lapTimes.length + 1,
+      totalTime: formatTime(currentLapTime),
+      lapTime: formatTime(lapDuration),
+    });
+
+    updateLapList();
+  }
+}
+
+function updateStopwatchDisplay() {
+  if (stopwatchDisplay) {
+    stopwatchDisplay.textContent = formatTime(stopwatchTime);
+  }
+}
+
+function formatTime(ms) {
+  const minutes = Math.floor(ms / 60000);
+  const seconds = Math.floor((ms % 60000) / 1000);
+  const milliseconds = Math.floor(ms % 1000);
+
+  return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(
+    2,
+    "0"
+  )}.${String(milliseconds).padStart(3, "0")}`;
+}
+
+function updateLapList() {
+  if (!lapList) return;
+
+  const lap = lapTimes[lapTimes.length - 1];
+  const li = document.createElement("li");
+  li.innerHTML = `
+      <span class="lap-number">Lap ${lap.number}</span>
+      <span class="lap-time">${lap.lapTime}</span>
+      <span class="total-time">${lap.totalTime}</span>
+  `;
+
+  // Insert new lap at the top of the list
+  if (lapList.firstChild) {
+    lapList.insertBefore(li, lapList.firstChild);
+  } else {
+    lapList.appendChild(li);
+  }
+}
+
+// Initialize stopwatch event listeners
+document.addEventListener("DOMContentLoaded", () => {
+  console.log("DOM Content Loaded");
+  console.log("Stopwatch Display:", stopwatchDisplay);
+  console.log("Start Button:", stopwatchStartBtn);
+  console.log("Stop Button:", stopwatchStopBtn);
+  console.log("Lap Button:", stopwatchLapBtn);
+  console.log("Reset Button:", stopwatchResetBtn);
+  console.log("Lap List:", lapList);
+
+  if (stopwatchStartBtn) {
+    stopwatchStartBtn.addEventListener("click", startStopwatch);
+    console.log("Added start event listener");
+  }
+  if (stopwatchStopBtn) {
+    stopwatchStopBtn.addEventListener("click", stopStopwatch);
+    console.log("Added stop event listener");
+  }
+  if (stopwatchLapBtn) {
+    stopwatchLapBtn.addEventListener("click", recordLap);
+    console.log("Added lap event listener");
+  }
+  if (stopwatchResetBtn) {
+    stopwatchResetBtn.addEventListener("click", resetStopwatch);
+    console.log("Added reset event listener");
+  }
+
+  // Initialize stopwatch display
+  if (stopwatchDisplay) {
+    updateStopwatchDisplay();
+    console.log("Initialized stopwatch display");
   }
 });

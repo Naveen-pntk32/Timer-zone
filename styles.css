@@ -6,6 +6,10 @@
   --button-hover: #3a3a3a;
   --accent-color: #4a4a4a;
   --modal-bg: #242424;
+  --nav-width: 250px;
+  --nav-bg: #242424;
+  --nav-hover: #2f2f2f;
+  --border-color: #333;
 }
 
 body {
@@ -451,4 +455,250 @@ body {
 
 .container.fullscreen .time-buttons {
   margin: 2rem 0;
+}
+
+/* App Layout */
+.app-container {
+  display: flex;
+  min-height: 100vh;
+  background-color: var(--bg-color);
+}
+
+/* Side Navigation */
+.side-nav {
+  width: var(--nav-width);
+  background-color: var(--nav-bg);
+  border-right: 1px solid var(--border-color);
+  padding: 1rem 0;
+  position: fixed;
+  height: 100vh;
+  left: 0;
+  top: 0;
+}
+
+.nav-header {
+  padding: 0 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.nav-header h1 {
+  font-size: 1.5rem;
+  margin: 0;
+  color: var(--text-color);
+}
+
+.nav-links {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  padding: 1rem 1.5rem;
+  color: var(--text-color);
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.nav-item:hover {
+  background-color: var(--nav-hover);
+}
+
+.nav-item.active {
+  background-color: var(--accent-color);
+}
+
+.nav-item i {
+  margin-right: 1rem;
+  width: 20px;
+  text-align: center;
+}
+
+/* Main Content */
+.main-content {
+  flex: 1;
+  margin-left: var(--nav-width);
+  min-height: 100vh;
+  background-color: var(--bg-color);
+}
+
+.content-section {
+  display: none;
+  padding: 2rem;
+}
+
+.content-section.active {
+  display: block;
+}
+
+/* Action Buttons */
+.action-btn {
+  background: var(--button-bg);
+  border: none;
+  color: var(--text-color);
+  padding: 0.75rem 1.5rem;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1rem;
+  transition: background-color 0.2s;
+}
+
+.action-btn:hover {
+  background: var(--button-hover);
+}
+
+.action-btn i {
+  font-size: 1.1rem;
+}
+
+/* Stop Section */
+.stop-controls {
+  display: flex;
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+/* Calendar Section */
+#calendar {
+  background: var(--modal-bg);
+  border-radius: 8px;
+  padding: 1rem;
+  margin: 1rem 0;
+  min-height: 300px;
+}
+
+.schedule-form {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+  flex-wrap: wrap;
+}
+
+.schedule-form input {
+  flex: 1;
+  min-width: 200px;
+  padding: 0.75rem;
+  background: var(--button-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  color: var(--text-color);
+}
+
+/* Notes Section */
+.notes-container {
+  margin-top: 1rem;
+}
+
+#task-notes {
+  width: 100%;
+  min-height: 200px;
+  padding: 1rem;
+  background: var(--button-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  color: var(--text-color);
+  margin-bottom: 1rem;
+  resize: vertical;
+  font-family: inherit;
+}
+
+/* Stopwatch Section */
+.stopwatch-display {
+  font-size: 4rem;
+  font-weight: bold;
+  font-family: monospace;
+  margin: 2rem 0;
+  color: var(--text-color);
+  font-variant-numeric: tabular-nums;
+  background: var(--button-bg);
+  padding: 2rem;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.stopwatch-controls {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: 2rem;
+}
+
+.stopwatch-controls .action-btn {
+  min-width: 120px;
+}
+
+.stopwatch-controls .action-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.stopwatch-controls .action-btn:not(:disabled):hover {
+  background: var(--button-hover);
+  transform: translateY(-1px);
+}
+
+.lap-times {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.lap-times h3 {
+  color: var(--text-color);
+  margin-bottom: 1rem;
+  font-size: 1.2rem;
+}
+
+.lap-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  max-height: 300px;
+  overflow-y: auto;
+  background: var(--button-bg);
+  border-radius: 8px;
+}
+
+.lap-list li {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--border-color);
+  font-family: monospace;
+}
+
+.lap-list li:last-child {
+  border-bottom: none;
+}
+
+.lap-list .lap-number {
+  color: #888;
+}
+
+.lap-list .lap-time {
+  color: var(--text-color);
+}
+
+/* Add custom scrollbar for lap list */
+.lap-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+.lap-list::-webkit-scrollbar-track {
+  background: var(--bg-color);
+  border-radius: 4px;
+}
+
+.lap-list::-webkit-scrollbar-thumb {
+  background: var(--accent-color);
+  border-radius: 4px;
+}
+
+.lap-list::-webkit-scrollbar-thumb:hover {
+  background: var(--button-hover);
 } 
